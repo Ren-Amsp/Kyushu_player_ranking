@@ -2,117 +2,65 @@
 <html lang="ja">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>九州スマブラSP プレイヤーランキング</title>
-
-  <!-- Tailwind CSS -->
-  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
-
-  <!-- DataTables CSS -->
+  <title>九州プレイヤーランキング</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" />
   <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css" />
+</head>
+<body class="bg-gray-100 text-gray-900">
 
-  <!-- Chart.js -->
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <div class="container mx-auto p-4">
+    <h1 class="text-3xl font-bold mb-4">九州プレイヤーランキング</h1>
 
-  <!-- jQuery & DataTables JS -->
+    <table id="rankingTable" class="display w-full text-sm">
+      <thead>
+        <tr>
+          <th>順位</th>
+          <th>プレイヤー名</th>
+          <th>総合ポイント</th>
+          <th>順位履歴</th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+  </div>
+
   <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
   <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
-
-  <!-- PapaParse -->
-  <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
-</head>
-<body class="bg-gray-50 text-gray-800 font-sans">
-
-  <header class="bg-indigo-600 text-white py-6 shadow-md">
-    <h1 class="text-center text-3xl font-bold">九州スマブラSP プレイヤーランキング</h1>
-    <p class="text-center mt-2 text-sm">CSVデータから自動生成されています</p>
-  </header>
-
-  <main class="container mx-auto px-4 py-8">
-
-    <!-- グラフエリア -->
-    <section class="mb-10">
-      <h2 class="text-xl font-semibold mb-4">トップ10ポイント（バーグラフ）</h2>
-      <canvas id="rankingChart" class="w-full max-w-4xl mx-auto"></canvas>
-    </section>
-
-    <!-- テーブルエリア -->
-    <div class="overflow-x-auto bg-white shadow rounded-lg p-4">
-      <table id="ranking-table" class="min-w-full display">
-        <thead>
-          <tr id="table-head"></tr>
-        </thead>
-        <tbody id="table-body"></tbody>
-      </table>
-    </div>
-
-  </main>
-
-  <footer class="text-center py-6 text-gray-500 text-sm">
-    © 2025 九州プレイヤーランキングプロジェクト
-  </footer>
-
   <script>
-    fetch("kyushu_player_ranking.csv")
-      .then(res => res.text())
-      .then(csv => {
-        const data = Papa.parse(csv, { header: true }).data;
-        const headers = Object.keys(data[0]);
-
-        // テーブルヘッダー作成
-        headers.forEach(h => {
-          $('#table-head').append(`<th>${h}</th>`);
+    $(document).ready(function () {
+      $.get("kyushu_player_ranking.csv", function (data) {
+        const lines = data.trim().split("\n");
+        const headers = lines[0].split(",");
+        const rows = lines.slice(1).map(line => {
+          const values = line.split(",");
+          return headers.reduce((obj, header, index) => {
+            obj[header] = values[index];
+            return obj;
+          }, {});
         });
 
-        // テーブル行作成
-        data.forEach(row => {
-          const rowHtml = headers.map(h => `<td>${row[h]}</td>`).join('');
-          $('#table-body').append(`<tr>${rowHtml}</tr>`);
+        const tbody = $("#rankingTable tbody");
+        rows.forEach(row => {
+          const playerName = row["プレイヤー名"] || "";
+          const position = row["順位"] || "";
+          const points = row["総合ポイント"] || "";
+          const history = row["順位履歴"] || "";
+          const tr = `<tr>
+            <td>${position}</td>
+            <td>${playerName}</td>
+            <td>${points}</td>
+            <td>${history}</td>
+          </tr>`;
+          tbody.append(tr);
         });
 
-        // DataTable初期化（並び替え・検索など有効）
-        $('#ranking-table').DataTable({
+        $("#rankingTable").DataTable({
           language: {
-            url: "https://cdn.datatables.net/plug-ins/1.13.6/i18n/ja.json"
-          },
-          pageLength: 25
-        });
-
-        // Chart.jsグラフ描画（トップ10）
-        const top10 = data.slice(0, 10);
-        const names = top10.map(r => r["プレイヤー名"]);
-        const points = top10.map(r => parseFloat(r["総合ポイント"]));
-
-        const ctx = document.getElementById('rankingChart').getContext('2d');
-        new Chart(ctx, {
-          type: 'bar',
-          data: {
-            labels: names,
-            datasets: [{
-              label: '総合ポイント',
-              data: points,
-              backgroundColor: 'rgba(99, 102, 241, 0.7)',
-              borderRadius: 5
-            }]
-          },
-          options: {
-            responsive: true,
-            plugins: {
-              legend: { display: false },
-              title: {
-                display: false
-              }
-            },
-            scales: {
-              y: {
-                beginAtZero: true,
-                ticks: { stepSize: 10 }
-              }
-            }
+            url: "//cdn.datatables.net/plug-ins/1.13.6/i18n/ja.json"
           }
         });
-
       });
+    });
   </script>
 </body>
 </html>
