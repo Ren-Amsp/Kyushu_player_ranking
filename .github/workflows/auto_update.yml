@@ -2,8 +2,8 @@ name: Auto Update Kyushu Ranking
 
 on:
   schedule:
-    - cron: "0 3 * * *"  # 毎日12:00 (JST)
-  workflow_dispatch:     # 手動実行も可能
+    - cron: "0 3 * * *"  # JST 毎日12:00
+  workflow_dispatch:     # ✅ 手動実行を有効にする
 
 jobs:
   build:
